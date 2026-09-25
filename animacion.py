@@ -19,7 +19,7 @@ COLOR_RECTA_TANGENTE = '#ffb703'  # ámbar -> recta tangente extendida
 CMAP_TRAYECTORIA = 'plasma'   # degradado para la curva de fondo
 COLOR_FONDO_PANEL = (0.97, 0.97, 0.99)
 
-# Interruptores para los elementos extra 
+# Interruptores para los elementos extra (inspirados en el ejemplo del docente)
 MOSTRAR_PLANO_OSCULADOR = True
 MOSTRAR_RECTA_TANGENTE = True
 
@@ -82,6 +82,11 @@ quiver_B = None
 plano_osculador = None
 recta_tangente = None
 
+# Etiquetas de texto "T", "N", "B" pegadas a la punta de cada vector
+etiqueta_T = None
+etiqueta_N = None
+etiqueta_B = None
+
 # Texto con los valores numéricos de kappa y tau
 texto_info = ax.text2D(0.02, 0.95, '', transform=ax.transAxes, fontsize=11,
                         family='monospace')
@@ -96,6 +101,7 @@ LARGO_RECTA_TANGENTE = 4.0  # cuánto se extiende la recta tangente a cada lado
 
 def update(frame):
     global quiver_T, quiver_N, quiver_B, plano_osculador, recta_tangente
+    global etiqueta_T, etiqueta_N, etiqueta_B
 
     px, py, pz = xs[frame], ys[frame], zs[frame]
     p = np.array([px, py, pz])
@@ -116,6 +122,10 @@ def update(frame):
     if recta_tangente is not None:
         recta_tangente.remove()
         recta_tangente = None
+    if etiqueta_T is not None:
+        etiqueta_T.remove()
+        etiqueta_N.remove()
+        etiqueta_B.remove()
 
     quiver_T = ax.quiver(px, py, pz, *Tv, length=ESCALA_VECTORES, color=COLOR_T,
                           linewidth=2.2, arrow_length_ratio=0.25)
@@ -123,6 +133,14 @@ def update(frame):
                           linewidth=2.2, arrow_length_ratio=0.25)
     quiver_B = ax.quiver(px, py, pz, *Bv, length=ESCALA_VECTORES, color=COLOR_B,
                           linewidth=2.2, arrow_length_ratio=0.25)
+
+    # Etiquetas "T", "N", "B" justo en la punta de cada vector (mismo color que la flecha)
+    punta_T = p + ESCALA_VECTORES * Tv
+    punta_N = p + ESCALA_VECTORES * Nv
+    punta_B = p + ESCALA_VECTORES * Bv
+    etiqueta_T = ax.text(*punta_T, 'T', color=COLOR_T, fontsize=12, fontweight='bold')
+    etiqueta_N = ax.text(*punta_N, 'N', color=COLOR_N, fontsize=12, fontweight='bold')
+    etiqueta_B = ax.text(*punta_B, 'B', color=COLOR_B, fontsize=12, fontweight='bold')
 
     # Plano osculador: generado por T y N, con normal B, centrado en la partícula
     if MOSTRAR_PLANO_OSCULADOR:
@@ -155,7 +173,7 @@ def update(frame):
     )
     texto_info.set_bbox(dict(facecolor='white', alpha=0.75, edgecolor='lightgray', boxstyle='round,pad=0.4'))
 
-    return particula, quiver_T, quiver_N, quiver_B, texto_info
+    return particula, quiver_T, quiver_N, quiver_B, etiqueta_T, etiqueta_N, etiqueta_B, texto_info
 
 
 # Leyenda fija (una sola vez, no en cada frame)
@@ -173,10 +191,5 @@ ax.legend(loc='upper right', framealpha=0.9)
 
 anim = FuncAnimation(fig, update, frames=N_FRAMES, interval=30, blit=False)
 
-# Para exportar como video/gif (descomentar la que necesites).
-# Requiere ffmpeg instalado para mp4, o pillow (ya lo tienes) para gif.
-# anim.save('triedro_frenet.mp4', writer='ffmpeg', fps=30, dpi=150)
-# anim.save('triedro_frenet.gif', writer='pillow', fps=30)
 
 plt.show()
-
